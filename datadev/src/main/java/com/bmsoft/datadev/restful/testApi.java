@@ -14,7 +14,7 @@ public class testApi {
 
 	@RequestMapping("/test")
 	public String test(){
-		return "ssssss";
+		return "ssssss11111";
 	}
 
 }
