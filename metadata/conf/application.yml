@@ -1,8 +1,8 @@
 server:
-  port: 9022
+  port: 7863
 spring:
   application:
-    name: cloud-datasource
+    name: cloud-areyouok
 
 
 eureka:
