@@ -161,6 +161,7 @@ object StorageUtils extends Logging{
   def getJvmUser:String = System.getProperty("user.name")
 
   def isHDFSNode:Boolean = {
+    println("我来判断啦")
     val confPath = new File(HDFSUtils.hadoopConfDir)
     //TODO IO-client mode need return false
     if(!confPath.exists() || confPath.isFile)

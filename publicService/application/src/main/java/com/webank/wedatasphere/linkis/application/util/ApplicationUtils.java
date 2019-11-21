@@ -26,6 +26,7 @@ import com.webank.wedatasphere.linkis.application.conf.ApplicationConfiguration;
 import com.webank.wedatasphere.linkis.storage.utils.FileSystemUtils;
 import lombok.Cleanup;
 import org.apache.commons.io.IOUtils;
+import org.mybatis.spring.annotation.MapperScan;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

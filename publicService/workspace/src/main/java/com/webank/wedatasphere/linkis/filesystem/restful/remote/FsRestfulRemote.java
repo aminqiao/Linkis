@@ -89,4 +89,11 @@ public interface FsRestfulRemote {
 
     @GetMapping("/api/filesystem/openLog")
     Response openLog(@Context HttpServletRequest req, @QueryParam("path")String path) throws IOException, WorkSpaceException;
+
+    @PostMapping("/api/filesystem/addScript")
+    Response addScript(@Context HttpServletRequest req,
+                           @FormDataParam("path") String path,
+                           @QueryParam("model") String modelName,
+                           @QueryParam("version") String version,
+                           FormDataMultiPart form) throws WorkSpaceException, IOException;
 }
