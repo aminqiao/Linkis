@@ -48,6 +48,8 @@ public class BuildHDFSFileSystem implements BuildFactory {
             fs = new HDFSFileSystem();
         } else {
             //TODO Agent user(代理的用户)
+            System.out.println("我的天啊啊哈哈哈哈哈哈");
+
             Enhancer enhancer = new Enhancer();
             enhancer.setSuperclass(HDFSFileSystem.class.getSuperclass());
             enhancer.setCallback(new IOMethodInterceptor(fsName()));

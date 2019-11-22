@@ -70,6 +70,7 @@ class SpringCloudGatewayConfiguration {
         override def apply(t: PredicateSpec): Route.AsyncBuilder = t.path(API_URL_PREFIX + "**")
           .uri(ROUTE_URI_FOR_HTTP_HEADER + Sender.getThisServiceInstance.getApplicationName)
       })
+
       .route("dws", new java.util.function.Function[PredicateSpec, Route.AsyncBuilder] {
         override def apply(t: PredicateSpec): Route.AsyncBuilder = t.path(PROXY_URL_PREFIX + "**")
           .uri(ROUTE_URI_FOR_HTTP_HEADER + Sender.getThisServiceInstance.getApplicationName)

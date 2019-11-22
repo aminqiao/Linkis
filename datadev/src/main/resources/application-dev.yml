@@ -1,0 +1,16 @@
+server:
+  address: 10.194.186.230
+  port: 2312
+
+
+spring:
+  application:
+    name: datadev1
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://10.194.186.230:20303/eureka
+  instance:
+    metadata-map:
+      test: wedatasphere

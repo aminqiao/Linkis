@@ -40,6 +40,7 @@ class FsService {
   private val LOGGER = LoggerFactory.getLogger(getClass)
 
   def getFileSystemCache(user: String, fsPath: FsPath): FileSystem = {
+
     if (FsCache.fsInfo.get(user) != null) {
       //The outer layer does not add more judgments, it is also ok, it is to lock the user's fs group.(外层不加多个判断也ok，都是要锁用户的fs组)
       FsCache.fsInfo.get(user) synchronized {
@@ -50,9 +51,12 @@ class FsService {
         }
       }
     } else {
+
       FsCache.fsInfo synchronized {
         if (FsCache.fsInfo.get(user) == null) {
+          println("我竟然进入了这里之前")
           FsCache.fsInfo += user -> ArrayBuffer(produceFSInfo(user, fsPath))
+          print("我竟然进入了这里之后")
         }
       }
       //(43-49) Prevent file and hdfs from entering 37 lines at the same time, causing 51 lines to report the cross mark
@@ -70,18 +74,23 @@ class FsService {
 
   def getFileSystem(user: String, fsPath: FsPath): FileSystem = {
     val start = System.currentTimeMillis()
+
+    //将多线程任务塞到之FutureTask中
     val task: FutureTask[FileSystem] = new FutureTask[FileSystem](new Callable[FileSystem] {
       override def call(): FileSystem = {
         getFileSystemCache(user, fsPath)
       }
     })
+
+    println("我到了我到了1:"+task)
     FsUtil.executorService.execute(task)
     try {
+      println("我到了我到了2")
       task.get(FsUtil.FILESYSTEM_GET_TIMEOUT.getValue, TimeUnit.MILLISECONDS)
     } catch {
-      case e: InterruptedException => LOGGER.info(e.getMessage); task.cancel(true); null
-      case e: ExecutionException => LOGGER.info(e.getMessage); task.cancel(true); null
-      case e: TimeoutException => LOGGER.info(e.getMessage); task.cancel(true); null
+      case e: InterruptedException =>e.printStackTrace(); LOGGER.info(e.getMessage); task.cancel(true); null
+      case e: ExecutionException => e.printStackTrace();LOGGER.info(e.getMessage); task.cancel(true); null
+      case e: TimeoutException => e.printStackTrace;LOGGER.info(e.getMessage); task.cancel(true); null
     } finally {
       val end = System.currentTimeMillis()
       LOGGER.info(s"${user} gets the ${fsPath.getFsType} type filesystem using a total of ${end - start} milliseconds(${user}获取${fsPath.getFsType}类型的filesystem一共使用了${end - start}毫秒)")
@@ -91,7 +100,9 @@ class FsService {
 
   def produceFSInfo(user: String, fsPath: FsPath): FSInfo = {
     try {
+      println("我竟然进入了这里 我进去了1")
       val fs = FSFactory.getFs(fsPath).asInstanceOf[FileSystem]
+
       fs.init(null)
       new FSInfo(user, fs, System.currentTimeMillis())
     } catch {

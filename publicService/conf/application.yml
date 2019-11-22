@@ -1,5 +1,6 @@
 server:
   port: 9002
+  address: 10.194.186.230
 spring:
   application:
     name: cloud-publicservice
@@ -8,7 +9,7 @@ spring:
 eureka:
   client:
     serviceUrl:
-      defaultZone: locahost
+      defaultZone: http://10.194.186.230:20303/eureka
   instance:
     metadata-map:
       test: wedatasphere

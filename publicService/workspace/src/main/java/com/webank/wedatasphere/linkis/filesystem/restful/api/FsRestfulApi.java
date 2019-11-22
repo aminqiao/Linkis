@@ -22,11 +22,15 @@ import com.webank.wedatasphere.linkis.common.io.MetaData;
 import com.webank.wedatasphere.linkis.common.io.Record;
 import com.webank.wedatasphere.linkis.common.io.resultset.ResultSet;
 import com.webank.wedatasphere.linkis.filesystem.conf.WorkSpaceConfiguration;
+import com.webank.wedatasphere.linkis.filesystem.dao.ResourceVersionMapper;
 import com.webank.wedatasphere.linkis.filesystem.entity.DirFileTree;
+import com.webank.wedatasphere.linkis.filesystem.entity.ResourceVersion;
 import com.webank.wedatasphere.linkis.filesystem.exception.WorkSpaceException;
 import com.webank.wedatasphere.linkis.filesystem.restful.remote.FsRestfulRemote;
 import com.webank.wedatasphere.linkis.filesystem.service.FsService;
+import com.webank.wedatasphere.linkis.filesystem.service.ResourceService;
 import com.webank.wedatasphere.linkis.filesystem.util.Constants;
+import com.webank.wedatasphere.linkis.filesystem.util.UriFileHdfsUtil;
 import com.webank.wedatasphere.linkis.filesystem.util.WorkspaceUtil;
 import com.webank.wedatasphere.linkis.server.Message;
 import com.webank.wedatasphere.linkis.server.security.SecurityFilter;
@@ -47,6 +51,8 @@ import com.webank.wedatasphere.linkis.storage.resultset.table.TableRecord;
 import com.webank.wedatasphere.linkis.storage.script.*;
 import com.webank.wedatasphere.linkis.storage.utils.StorageUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.codehaus.jackson.JsonNode;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -70,15 +76,13 @@ import javax.ws.rs.core.Response;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 /**
- *  johnnwang
- *  2018/10/25
+ * johnnwang
+ * 2018/10/25
  */
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes({MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA})
@@ -88,6 +92,9 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Autowired
     private FsService fsService;
 
+    @Autowired
+    ResourceService resourceService;
+
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     private FileSystem getFileSystem(FsPath fsPath, String userName) throws IOException {
@@ -96,8 +103,8 @@ public class FsRestfulApi implements FsRestfulRemote {
         return fileSystem;
     }
 
-    private void fsValidate(FileSystem fileSystem) throws WorkSpaceException {
-        if (fileSystem == null){
+    private void fsValidate(Object fileSystem) throws WorkSpaceException {
+        if (fileSystem == null) {
             throw new WorkSpaceException("The user has obtained the filesystem for more than 2s. Please contact the administrator.（用户获取filesystem的时间超过2s，请联系管理员）");
         }
     }
@@ -105,32 +112,34 @@ public class FsRestfulApi implements FsRestfulRemote {
     @GET
     @Path("/getUserRootPath")
     @Override
-    public Response getUserRootPath(@Context HttpServletRequest req,@QueryParam("pathType")String pathType) throws IOException, WorkSpaceException {
+    public Response getUserRootPath(@Context HttpServletRequest req, @QueryParam("pathType") String pathType) throws IOException, WorkSpaceException {
         String userName = SecurityFilter.getLoginUsername(req);
         String path = null;
         String returnType = null;
-        if(pathType.equals("hdfs")){
-            if (WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_PREFIX.getValue().toString().endsWith("/")){
+        if (pathType.equals("hdfs")) {
+            if (WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_PREFIX.getValue().toString().endsWith("/")) {
                 path = WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_PREFIX.getValue() + userName + WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_SUFFIX.getValue();
-            }else{
-                path = WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_PREFIX.getValue() + "/" +  userName + WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_SUFFIX.getValue();
+            } else {
+                path = WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_PREFIX.getValue() + "/" + userName + WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_SUFFIX.getValue();
             }
             returnType = "HDFS";
-        }else {
-            if (WorkSpaceConfiguration.LOCAL_USER_ROOT_PATH.getValue().toString().endsWith("/")){
+        } else {
+            if (WorkSpaceConfiguration.LOCAL_USER_ROOT_PATH.getValue().toString().endsWith("/")) {
                 path = WorkSpaceConfiguration.LOCAL_USER_ROOT_PATH.getValue() + userName + "/";
-            }else{
+            } else {
                 path = WorkSpaceConfiguration.LOCAL_USER_ROOT_PATH.getValue() + "/" + userName + "/";
             }
             returnType = "Local";
         }
         FsPath fsPath = new FsPath(path);
         FileSystem fileSystem = fsService.getFileSystem(userName, fsPath);
-        if (fileSystem != null &&!fileSystem.exists(fsPath)) {
+        if (fileSystem != null && !fileSystem.exists(fsPath)) {
             throw new WorkSpaceException("User local root directory does not exist, please contact administrator to add（用户本地根目录不存在,请联系管理员添加)");
         }
-        if (fileSystem == null) {path = null;}
-        return Message.messageToResponse(Message.ok().data("user"+returnType+"RootPath", path));
+        if (fileSystem == null) {
+            path = null;
+        }
+        return Message.messageToResponse(Message.ok().data("user" + returnType + "RootPath", path));
     }
 
     @POST
@@ -245,9 +254,9 @@ public class FsRestfulApi implements FsRestfulRemote {
         return Message.messageToResponse(Message.ok());
     }
 
-    private boolean isInUserWorkspace(String path,String userName){
+    private boolean isInUserWorkspace(String path, String userName) {
         String hdfsPath = WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_PREFIX.getValue() + userName + WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_SUFFIX.getValue();
-        hdfsPath = hdfsPath.endsWith("/")?hdfsPath.substring(0,hdfsPath.length() -1):hdfsPath;
+        hdfsPath = hdfsPath.endsWith("/") ? hdfsPath.substring(0, hdfsPath.length() - 1) : hdfsPath;
         String filePath = WorkSpaceConfiguration.LOCAL_USER_ROOT_PATH.getValue() + userName;
         return path.startsWith(filePath) || path.startsWith(hdfsPath);
     }
@@ -638,7 +647,7 @@ public class FsRestfulApi implements FsRestfulRemote {
                     TableMetaData tableMetaData = (TableMetaData) metaData;
                     csvfsWriter.addMetaData(tableMetaData);
                     while (resultSetReader.hasNext() && (!isLimitDownloadSize || index < WorkSpaceConfiguration.RESULT_SET_DOWNLOAD_MAX_SIZE_CSV.getValue())) {
-                        index +=1;
+                        index += 1;
                         csvfsWriter.addRecord(resultSetReader.getRecord());
                     }
                     inputStream = csvfsWriter.getCSVStream();
@@ -650,7 +659,7 @@ public class FsRestfulApi implements FsRestfulRemote {
                         stringBuilder.append("\n");
                     }
                     while (resultSetReader.hasNext() && (!isLimitDownloadSize || index < WorkSpaceConfiguration.RESULT_SET_DOWNLOAD_MAX_SIZE_CSV.getValue())) {
-                        index +=1;
+                        index += 1;
                         LineRecord lineRecord = (LineRecord) resultSetReader.getRecord();
                         stringBuilder.append(lineRecord.getLine());
                         stringBuilder.append("\n");
@@ -666,7 +675,7 @@ public class FsRestfulApi implements FsRestfulRemote {
                 excelFsWriter = ExcelFsWriter.getExcelFsWriter(Constants.FILEDEFAULTCHARSET, Constants.DEFAULTSHEETNAME, Constants.DEFAULTDATETYPE);
                 excelFsWriter.addMetaData(tableMetaData);
                 while (resultSetReader.hasNext() && (!isLimitDownloadSize || index < WorkSpaceConfiguration.RESULT_SET_DOWNLOAD_MAX_SIZE_EXCEL.getValue())) {
-                    index +=1;
+                    index += 1;
                     excelFsWriter.addRecord(resultSetReader.getRecord());
                 }
                 Workbook workBook = excelFsWriter.getWorkBook();
@@ -793,6 +802,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Path("/openLog")
     @Override
     public Response openLog(@Context HttpServletRequest req, @QueryParam("path") String path) throws IOException, WorkSpaceException {
+        System.out.println("我进入了打开日志方法");
         String userName = SecurityFilter.getLoginUsername(req);
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "is empty!(为空！)");
@@ -856,4 +866,106 @@ public class FsRestfulApi implements FsRestfulRemote {
         }
         fileSystem.delete(fsPath);
     }
+
+
+
+    /**
+     * 在指定的目录创建文件
+     */
+    @POST
+    @Path("/addScript")
+    @Override
+    public Response addScript(@Context HttpServletRequest req,
+              @FormDataParam("path") String path,
+              @QueryParam("model") String modelName,
+              @QueryParam("version") String version,
+              FormDataMultiPart form) throws WorkSpaceException, IOException {
+
+
+//        resourceVersionMapper.insertResourceVersion(new ResourceVersion(null,10,"caozifu",new Date(),"kaiwanxiao","daddsa"));
+//        ResourceVersion resourceVersion = resourceVersionMapper.selectById(14);
+//        System.out.println("hahahhaahahahah     "+resourceVersion);
+
+
+        String userName = SecurityFilter.getLoginUsername(req);
+        resourceService.addScript(modelName,userName,Integer.parseInt(version));
+        //对数据库进行操作
+        FormDataBodyPart file = form.getField("file");
+        //获取文件名
+        String fileName = file.getContentDisposition().getFileName();
+        //获取即将要创建的的文件目录
+        String filePath = path + "/" + modelName + "/" + fileName + "/" + version;
+        //获取文件名
+        //获取即将要创建的的文件目录
+        if (StringUtils.isEmpty(path)) {
+            throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
+        }
+        //获取当前路径的fsPath
+        FsPath fsPath = new FsPath(filePath);
+        FileSystem fileSystem = fsService.getFileSystem(userName, fsPath);
+        fsValidate(fileSystem);
+        Boolean aBoolean = dirIsExist(fileSystem,fsPath);
+        if (!aBoolean){
+            //如果该目录不存在，则创建目录
+            fileSystem.mkdirs(fsPath);
+        }
+
+        //在指定目录创建文件
+        filePath = path + "/" + modelName + "/" + fileName + "/" + version + "/" + fileName;
+        fsPath = new FsPath(filePath);
+        //创建新的空白文件
+         try {
+             fileSystem.createNewFile(fsPath);
+             //将脚本文件内容写入空白文件中
+             InputStream is = file.getValueAs(InputStream.class);
+             OutputStream outputStream = fileSystem.write(fsPath, true);
+             IOUtils.copy(is, outputStream);
+             StorageUtils.close(outputStream, is, null);
+         }catch (Exception e){
+             e.printStackTrace();
+             return Message.messageToResponse(Message.error(e.getMessage()));
+         }
+
+        return Message.messageToResponse(Message.ok().data("info","创建成功"));
+    }
+
+
+    private Boolean dirIsExist(FileSystem fileSystem, FsPath path){
+        try {
+            boolean exists = fileSystem.exists(path);
+            return exists;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    /**
+     *  获取文件下的最高版本并返回版本号
+     * */
+    private Integer findMax(org.apache.hadoop.fs.FileSystem fileSystem, org.apache.hadoop.fs.Path path){
+        //找到同一个文件下的最高的版本
+        try {
+
+            System.out.println("----------------------------------------");
+            FileStatus[] fileStatuses = fileSystem.listStatus(path);
+            List<String> list = new ArrayList<>();
+            for (FileStatus fileStatus : fileStatuses) {
+                //将所有的名称都塞入list内
+                list.add(fileStatus.getPath().getName());
+            }
+            //排序
+            List<String> collect = list.stream().sorted((version1, version2) -> Integer.compare(Integer.parseInt(version2), Integer.parseInt(version1))).collect(Collectors.toList());
+            collect.forEach(System.out::println);
+
+            System.out.println("----------------------------------------");
+
+            return Integer.parseInt(collect.get(0));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
 }
