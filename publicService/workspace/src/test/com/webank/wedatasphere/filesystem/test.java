@@ -1,5 +1,6 @@
 package com.webank.wedatasphere.filesystem;
 import com.webank.wedatasphere.linkis.common.io.FsPath;
+import com.webank.wedatasphere.linkis.filesystem.conf.WorkSpaceConfiguration;
 import com.webank.wedatasphere.linkis.filesystem.dao.ResourceVersionMapper;
 import com.webank.wedatasphere.linkis.filesystem.entity.ResourceVersion;
 import com.webank.wedatasphere.linkis.filesystem.exception.WorkSpaceException;
@@ -47,8 +48,6 @@ public class test {
         formDataMultiPart.setContentDisposition(formDataContentDisposition);
         formDataMultiPart.setMediaType(MediaType.MULTIPART_FORM_DATA_TYPE);
         FormDataBodyPart formDataBodyPart = new FormDataBodyPart(formDataContentDisposition, "caozifu");
-
-
         formDataBodyPart.setValue("hahahahahahahahahahaaahahahahah");
 
 
@@ -148,5 +147,16 @@ public class test {
         System.out.println(resourceVersion);
     }
 
+
+    @Test
+    public void test5(){
+        FsPath fsPath = new FsPath(WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_PREFIX.getValue().toString() + WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_SUFFIX.getValue().toString());
+        System.out.println(fsPath.getSchemaPath());
+        System.out.println("==============================");
+        System.out.println(WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_PREFIX.getValue().toString() + WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_SUFFIX.getValue().toString());
+        System.out.println();
+        fsPath = new FsPath("hdfs:///tmp/linkis/hadoop");
+        System.out.println(fsPath.getSchemaPath());
+    }
 
 }

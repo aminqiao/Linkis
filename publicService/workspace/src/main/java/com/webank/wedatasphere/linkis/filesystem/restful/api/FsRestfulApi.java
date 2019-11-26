@@ -22,15 +22,12 @@ import com.webank.wedatasphere.linkis.common.io.MetaData;
 import com.webank.wedatasphere.linkis.common.io.Record;
 import com.webank.wedatasphere.linkis.common.io.resultset.ResultSet;
 import com.webank.wedatasphere.linkis.filesystem.conf.WorkSpaceConfiguration;
-import com.webank.wedatasphere.linkis.filesystem.dao.ResourceVersionMapper;
 import com.webank.wedatasphere.linkis.filesystem.entity.DirFileTree;
-import com.webank.wedatasphere.linkis.filesystem.entity.ResourceVersion;
 import com.webank.wedatasphere.linkis.filesystem.exception.WorkSpaceException;
 import com.webank.wedatasphere.linkis.filesystem.restful.remote.FsRestfulRemote;
 import com.webank.wedatasphere.linkis.filesystem.service.FsService;
 import com.webank.wedatasphere.linkis.filesystem.service.ResourceService;
 import com.webank.wedatasphere.linkis.filesystem.util.Constants;
-import com.webank.wedatasphere.linkis.filesystem.util.UriFileHdfsUtil;
 import com.webank.wedatasphere.linkis.filesystem.util.WorkspaceUtil;
 import com.webank.wedatasphere.linkis.server.Message;
 import com.webank.wedatasphere.linkis.server.security.SecurityFilter;
@@ -51,7 +48,6 @@ import com.webank.wedatasphere.linkis.storage.resultset.table.TableRecord;
 import com.webank.wedatasphere.linkis.storage.script.*;
 import com.webank.wedatasphere.linkis.storage.utils.StorageUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.codehaus.jackson.JsonNode;
@@ -880,13 +876,6 @@ public class FsRestfulApi implements FsRestfulRemote {
               @QueryParam("model") String modelName,
               @QueryParam("version") String version,
               FormDataMultiPart form) throws WorkSpaceException, IOException {
-
-
-//        resourceVersionMapper.insertResourceVersion(new ResourceVersion(null,10,"caozifu",new Date(),"kaiwanxiao","daddsa"));
-//        ResourceVersion resourceVersion = resourceVersionMapper.selectById(14);
-//        System.out.println("hahahhaahahahah     "+resourceVersion);
-
-
         String userName = SecurityFilter.getLoginUsername(req);
         resourceService.addScript(modelName,userName,Integer.parseInt(version));
         //对数据库进行操作
@@ -911,7 +900,7 @@ public class FsRestfulApi implements FsRestfulRemote {
         }
 
         //在指定目录创建文件
-        filePath = path + "/" + modelName + "/" + fileName + "/" + version + "/" + fileName;
+        filePath = path + "/" + modelName + "/" + fileName + "/" + (version+1)+ "/" + fileName;
         fsPath = new FsPath(filePath);
         //创建新的空白文件
          try {
@@ -968,4 +957,55 @@ public class FsRestfulApi implements FsRestfulRemote {
         return -1;
     }
 
+
+
+    @GET
+    @Path("/getDirFileTreesWithoutLog")
+    @Override
+    public Response getDirFileTreesWithoutLog(@Context HttpServletRequest req,
+                                    @QueryParam("path") String path) throws IOException, WorkSpaceException {
+        String userName = SecurityFilter.getLoginUsername(req);
+        if (StringUtils.isEmpty(path)) {
+            throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
+        }
+        FsPath fsPath = new FsPath(path);
+        FileSystem fileSystem = fsService.getFileSystem(userName, fsPath);
+        fsValidate(fileSystem);
+        if (!fileSystem.exists(fsPath)) {
+            return Message.messageToResponse(Message.ok().data("dirFileTrees", null));
+        }
+        DirFileTree dirFileTree = new DirFileTree();
+        dirFileTree.setPath(fsPath.getSchemaPath());
+        //if(!isInUserWorkspace(path,userName)) throw new WorkSpaceException("The user does not have permission to view the contents of the directory");
+        if (!fileSystem.canExecute(fsPath) || !fileSystem.canRead(fsPath)) {
+            throw new WorkSpaceException("The user does not have permission to view the contents of the directory(该用户无权限查看该目录的内容)");
+        }
+        dirFileTree.setName(new File(path).getName());
+        dirFileTree.setChildren(new ArrayList<>());
+        FsPathListWithError fsPathListWithError = fileSystem.listPathWithError(fsPath);
+        if (fsPathListWithError != null) {
+            for (FsPath children : fsPathListWithError.getFsPaths()) {
+                DirFileTree dirFileTreeChildren = new DirFileTree();
+                dirFileTreeChildren.setName(new File(children.getPath()).getName());
+                String str = "hdfs:///tmp/linkis/";
+                new FsPath(str);
+                System.out.println();
+                if (("log".equalsIgnoreCase(dirFileTreeChildren.getName())||"dwc".equalsIgnoreCase(dirFileTreeChildren.getName()))&&(fsPath.getSchemaPath().equalsIgnoreCase(new FsPath(WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_PREFIX.getValue().toString() + WorkSpaceConfiguration.HDFS_USER_ROOT_PATH_SUFFIX.getValue().toString()+userName).getSchemaPath()))){
+                    continue;
+                }
+                dirFileTreeChildren.setPath(fsPath.getFsType() + "://" + children.getPath());
+                dirFileTreeChildren.setProperties(new HashMap<>());
+                dirFileTreeChildren.setParentPath(fsPath.getSchemaPath());
+                if (!children.isdir()) {
+                    dirFileTreeChildren.setIsLeaf(true);
+                    dirFileTreeChildren.getProperties().put("size", String.valueOf(children.getLength()));
+                    dirFileTreeChildren.getProperties().put("modifytime", String.valueOf(children.getModification_time()));
+                }
+                dirFileTree.getChildren().add(dirFileTreeChildren);
+            }
+        }
+        Message message = Message.ok();
+        message.data("dirFileTrees", dirFileTree);
+        return Message.messageToResponse(message);
+    }
 }

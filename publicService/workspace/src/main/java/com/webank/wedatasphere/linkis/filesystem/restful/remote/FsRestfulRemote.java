@@ -96,4 +96,8 @@ public interface FsRestfulRemote {
                            @QueryParam("model") String modelName,
                            @QueryParam("version") String version,
                            FormDataMultiPart form) throws WorkSpaceException, IOException;
+
+    @GetMapping("/api/filesystem/getDirFileTreesWithoutLog")
+    Response getDirFileTreesWithoutLog(@Context HttpServletRequest req,
+                                              @QueryParam("path") String path) throws IOException, WorkSpaceException;
 }
