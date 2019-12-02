@@ -59,19 +59,24 @@ class CacheLogManager extends LogManager {
 
 
   override def createLogWriter(job: Job): LogWriter = {
-
     job match {
       case entranceExecutionJob:EntranceExecutionJob => {
         val cache:Cache = Cache(EntranceConfiguration.DEFAULT_CACHE_MAX.getValue)
+        //获取logPath
         val logPath:String = entranceExecutionJob.getTask.asInstanceOf[RequestPersistTask].getLogPath
+        //创建CacheLogWriter
         val cacheLogWriter:CacheLogWriter =
           new CacheLogWriter(logPath, EntranceConfiguration.DEFAULT_LOG_CHARSET.getValue,cache, entranceExecutionJob.getUser)
+        //
         entranceExecutionJob.setLogWriter(cacheLogWriter)
+        //
         val webSocketCacheLogReader:WebSocketCacheLogReader =
           new WebSocketCacheLogReader(logPath, EntranceConfiguration.DEFAULT_LOG_CHARSET.getValue, cache, entranceExecutionJob.getUser)
         entranceExecutionJob.setWebSocketLogReader(webSocketCacheLogReader)
+
         val webSocketLogWriter:WebSocketLogWriter = new WebSocketLogWriter(entranceExecutionJob, entranceContext.getOrCreateEventListenerBus)
         entranceExecutionJob.setWebSocketLogWriter(webSocketLogWriter)
+
         cacheLogWriter
       }
       case _ => null

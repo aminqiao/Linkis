@@ -362,6 +362,7 @@ public class EntranceRestfulApi implements EntranceRestfulRemote {
 /*        Map<String,Object> executionCode = (Map<String, Object>) json.get("executionCode");
         String executionCodeJson = new Gson().toJson(executionCode);
         json.put("executionCode",executionCodeJson);*/
+
         json.put(TaskConstant.UMUSER, SecurityFilter.getLoginUsername(req));
         ServerEvent serverEvent = new ServerEvent();
         serverEvent.setData(json);

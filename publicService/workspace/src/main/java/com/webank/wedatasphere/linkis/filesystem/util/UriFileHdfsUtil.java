@@ -12,7 +12,7 @@ public class UriFileHdfsUtil {
     public  static FileSystem getFileSystem(){
         try {
             FileSystem fileSystem = FileSystem.get(
-                    new URI("hdfs://10.194.186.229:9000"),
+                    new URI("hdfs://10.194.186.229:8020"),
                     new Configuration(), "bmsoft");
             return fileSystem;
         } catch (IOException e) {

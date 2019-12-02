@@ -59,6 +59,8 @@ abstract class EngineRequester extends Logging {
     pushLog(job, LogUtils.generateInfo("Background is starting a new engine for you, it may take several seconds, please wait"))
     engineInitThreads.put(engineInitThread.instance, engineInitThread)
     Utils.tryFinally(engineInitThread.waitUntilInited())(engineInitThreads.remove(engineInitThread.instance))
+
+
     info(s"the engine for user ${requestEngine.user} which requested by ${requestEngine.creator} has inited.")
     pushLog(job, LogUtils.generateInfo("Congratulations! Your new engine has started successfully"))
     engineInitThread.getEngine

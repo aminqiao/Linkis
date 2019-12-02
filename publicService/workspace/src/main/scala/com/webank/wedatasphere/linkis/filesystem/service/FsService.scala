@@ -54,9 +54,7 @@ class FsService {
 
       FsCache.fsInfo synchronized {
         if (FsCache.fsInfo.get(user) == null) {
-          println("我竟然进入了这里之前")
           FsCache.fsInfo += user -> ArrayBuffer(produceFSInfo(user, fsPath))
-          print("我竟然进入了这里之后")
         }
       }
       //(43-49) Prevent file and hdfs from entering 37 lines at the same time, causing 51 lines to report the cross mark
@@ -82,10 +80,8 @@ class FsService {
       }
     })
 
-    println("我到了我到了1:"+task)
     FsUtil.executorService.execute(task)
     try {
-      println("我到了我到了2")
       task.get(FsUtil.FILESYSTEM_GET_TIMEOUT.getValue, TimeUnit.MILLISECONDS)
     } catch {
       case e: InterruptedException =>e.printStackTrace(); LOGGER.info(e.getMessage); task.cancel(true); null
@@ -100,7 +96,6 @@ class FsService {
 
   def produceFSInfo(user: String, fsPath: FsPath): FSInfo = {
     try {
-      println("我竟然进入了这里 我进去了1")
       val fs = FSFactory.getFs(fsPath).asInstanceOf[FileSystem]
 
       fs.init(null)

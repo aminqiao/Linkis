@@ -124,6 +124,7 @@ public class EntranceSpringConfiguration {
     @ConditionalOnMissingBean(name = {LogManagerBeanAnnotation.BEAN_NAME})
     public LogManager generateLogManager(@ErrorCodeListenerBeanAnnotation.ErrorCodeListenerAutowiredAnnotation ErrorCodeListener errorCodeListener,
                                          @ErrorCodeManagerBeanAnnotation.ErrorCodeManagerAutowiredAnnotation ErrorCodeManager errorCodeManager){
+        //创建对象，并进行初始化注入
         CacheLogManager logManager = new CacheLogManager();
         logManager.setErrorCodeListener(errorCodeListener);
         logManager.setErrorCodeManager(errorCodeManager);
