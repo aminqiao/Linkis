@@ -41,7 +41,8 @@ abstract class LogManager extends LogListener {
  override def onLogUpdate(job: Job, log: String): Unit = {
    job match{
      case entranceExecutionJob:EntranceExecutionJob =>
-       if (entranceExecutionJob.getLogWriter.isEmpty) entranceExecutionJob synchronized {
+       if (entranceExecutionJob.getLogWriter.isEmpty)
+         entranceExecutionJob synchronized {
          if(entranceExecutionJob.getLogWriter.isEmpty) createLogWriter(entranceExecutionJob)
        }
        entranceExecutionJob.getLogWriter.foreach(logWriter => logWriter.write(log))

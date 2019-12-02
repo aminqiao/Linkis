@@ -165,6 +165,7 @@ class ConfigurationService extends Logging {
   }
 
   def queryAppConfig(userName: String, creator: String, appName: String): ResponseQueryConfig = {
+    //拿到applicationId
     val appID: Long = configMapper.selectAppIDByAppName(appName)
     var creatorID: Long = null
     if (StringUtils.isBlank(creator) || creator == appName) creatorID = appID

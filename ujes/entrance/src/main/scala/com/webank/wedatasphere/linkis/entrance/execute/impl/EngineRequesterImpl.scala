@@ -37,8 +37,10 @@ class EngineRequesterImpl extends EngineRequester {
   override protected def createRequestEngine(job: Job): RequestEngine = job match {
       //TODO The maximum timeout period created should be read from the database(TODO 创建的最大超时时间，应该从数据库读取)
     case entranceJob: EntranceJob =>
+      //获取sender对象
       val sender = Sender.getSender(EntranceConfiguration.CLOUD_CONSOLE_CONFIGURATION_SPRING_APPLICATION_NAME.getValue)
       val requestQueryGlobalConfig = RequestQueryGlobalConfig(entranceJob.getUser)
+      //ask()  =     receiver.receiveAndReply(message, UnionSender.getUnionSender(recycler, receiver)) 读取配置
       val responseQueryGlobalConfig = sender.ask(requestQueryGlobalConfig).asInstanceOf[ResponseQueryConfig]
       val keyAndValue = responseQueryGlobalConfig.getKeyAndValue
       val createTimeWait = keyAndValue.get(ENGINE_CREATE_MAX_WAIT_TIME.key)
@@ -48,6 +50,7 @@ class EngineRequesterImpl extends EngineRequester {
       else {
         val startupMap = TaskUtils.getStartupMap(entranceJob.getParams)
         val properties = new JMap[String, String]
+        //循环赋值
         startupMap.foreach {case (k, v) => if(v != null) properties.put(k, v.toString)}
         properties
       }

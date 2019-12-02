@@ -29,29 +29,23 @@ import net.sf.cglib.proxy.Enhancer
 object FSFactory extends Logging{
 
   private val buildClasses: Map[String, BuildFactory] = {
-    println("之前太难了")
     StorageUtils.loadClass[BuildFactory](StorageConfiguration.STORAGE_BUILD_FS_CLASSES.getValue, t => t.fsName())
   }
 
   def getBuildFactory(fsName: String): BuildFactory = {
-    println("我进来啦！！！")
     if(! buildClasses.contains(fsName)) throw new StorageFatalException(50000, s"Unsupported file system type(不支持的文件系统类型)：$fsName" )
-    println("我通过了if,name为："+fsName)
     buildClasses(fsName)
   }
 
 
   def getFs(fsType: String, proxyUser:String): Fs = {
-    println("最后进入了这里？")
     val user = StorageUtils.getJvmUser
-    println("最后进入了这里？")
     getBuildFactory(fsType).getFs(user, proxyUser)
   }
 
   def getFs(fsType: String): Fs = {
     val user = StorageUtils.getJvmUser
     val  build :BuildFactory = getBuildFactory(fsType)
-    println("深层次方法的user出来了！！！！"+user+"  -------"+build.fsName()+"-----")
     build.getFs(user,user)
   }
 
@@ -66,8 +60,6 @@ object FSFactory extends Logging{
     * @return
     */
   def getFs(fsPath: FsPath): Fs = {
-    println("我进入了深层方法 getFs")
-    println("我来咯！！！"+fsPath.getFsType())
     getFs(fsPath.getFsType())
   }
 

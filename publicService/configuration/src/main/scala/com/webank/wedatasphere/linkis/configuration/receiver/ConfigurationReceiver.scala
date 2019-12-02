@@ -37,7 +37,9 @@ class ConfigurationReceiver extends Receiver{
   override def receive(message: Any, sender: Sender): Unit = {}
 
   override def receiveAndReply(message: Any, sender: Sender): Any = message match {
+    //查询通用设置
     case RequestQueryGlobalConfig(userName:String)=>configurationService.queryGolbalConfig(userName)
+    //
     case e:RequestQueryAppConfig =>configurationService.queryAppConfig(e.userName,e.creator,e.appName)
     case e:RequestQueryAppConfigWithGlobal =>configurationService.queryAppConfigWithGlobal(e.userName,e.creator,e.appName,e.isMerge)
   }
