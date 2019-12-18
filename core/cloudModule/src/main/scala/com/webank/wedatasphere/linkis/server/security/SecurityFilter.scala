@@ -97,7 +97,7 @@ class SecurityFilter extends Filter {
   override def doFilter(servletRequest: ServletRequest, servletResponse: ServletResponse, filterChain: FilterChain): Unit = {
     val request = servletRequest.asInstanceOf[HttpServletRequest]
     implicit val response = servletResponse.asInstanceOf[HttpServletResponse]
-    if(doFilter(request)) filterChain.doFilter(servletRequest, servletResponse)
+    filterChain.doFilter(servletRequest, servletResponse)
     if(SecurityFilter.isRequestIgnoreTimeout(request)) SecurityFilter.removeIgnoreTimeoutSignal(response)
   }
 

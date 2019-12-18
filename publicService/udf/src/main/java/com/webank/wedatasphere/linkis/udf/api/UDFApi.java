@@ -71,7 +71,7 @@ public class UDFApi {
     public Response allUDF(@Context HttpServletRequest req, String jsonString){
         Message message = null;
         try {
-            String userName = SecurityFilter.getLoginUsername(req);
+            String userName = req.getHeader("X-User-Name");
             if(!StringUtils.isEmpty(jsonString)){
                 Map<String,Object> json = mapper.reader(Map.class).readValue(jsonString);
                 String type = (String) json.getOrDefault("type", "self");
@@ -134,7 +134,7 @@ public class UDFApi {
     public Response listUDF(@Context HttpServletRequest req, Map<String,Object> json){
         Message message = null;
         try {
-            String userName = SecurityFilter.getLoginUsername(req);
+            String userName = req.getHeader("X-User-Name");
             String type = (String) json.getOrDefault("type", "self");
             Long treeId = ((Integer) json.getOrDefault("treeId", -1)).longValue();
             String category = ((String) json.getOrDefault("category", "all"));
@@ -154,7 +154,7 @@ public class UDFApi {
     public Response addUDF(@Context HttpServletRequest req,  JsonNode json) {
         Message message = null;
         try {
-            String userName = SecurityFilter.getLoginUsername(req);
+            String userName = req.getHeader("X-User-Name");
             UDFInfo udfInfo = mapper.readValue(json.get("udfInfo"), UDFInfo.class);
             udfInfo.setCreateUser(userName);
             udfInfo.setCreateTime(new Date());
@@ -174,7 +174,7 @@ public class UDFApi {
     public Response updateUDF(@Context HttpServletRequest req,  JsonNode json) {
         Message message = null;
         try {
-            String userName = SecurityFilter.getLoginUsername(req);
+            String userName = req.getHeader("X-User-Name");
             UDFInfo udfInfo = mapper.readValue(json.get("udfInfo"), UDFInfo.class);
             udfInfo.setCreateUser(userName);
             udfInfo.setUpdateTime(new Date());
@@ -191,7 +191,7 @@ public class UDFApi {
     @GET
     @Path("delete/{id}")
     public Response deleteUDF(@Context HttpServletRequest req,@PathParam("id") Long id){
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         Message message = null;
         try {
             udfService.deleteUDF(id, userName);
@@ -207,7 +207,7 @@ public class UDFApi {
     @Path("isload")
     public Response isLoad(@Context HttpServletRequest req,
                            @QueryParam("udfId") Long udfId,@QueryParam("isLoad") Boolean isLoad){
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         Message message = null;
         try {
             if(isLoad){
@@ -226,7 +226,7 @@ public class UDFApi {
     @POST
     @Path("/tree/add")
     public Response addTree(@Context HttpServletRequest req, UDFTree udfTree){
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         Message message = null;
         try {
             udfTree.setCreateTime(new Date());
@@ -246,7 +246,7 @@ public class UDFApi {
     @POST
     @Path("/tree/update")
     public Response updateTree(@Context HttpServletRequest req, UDFTree udfTree){
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         Message message = null;
         try {
             udfTree.setUpdateTime(new Date());
@@ -265,7 +265,7 @@ public class UDFApi {
     @GET
     @Path("/tree/delete/{id}")
     public Response deleteTree(@Context HttpServletRequest req,@PathParam("id") Long id){
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         Message message = null;
         try {
             udfTreeService.deleteTree(id, userName);
@@ -282,7 +282,7 @@ public class UDFApi {
     public Response Authenticate(@Context HttpServletRequest req,  JsonNode json){
         Message message = null;
         try {
-            String userName = SecurityFilter.getLoginUsername(req);
+            String userName = req.getHeader("X-User-Name");
             if (StringUtils.isEmpty(userName)){
                 throw new UDFException("UserName is Empty!");
             }
@@ -302,7 +302,7 @@ public class UDFApi {
     public Response setExpire(@Context HttpServletRequest req,  JsonNode json){
         Message message = null;
         try {
-            String userName = SecurityFilter.getLoginUsername(req);
+            String userName = req.getHeader("X-User-Name");
             if (StringUtils.isEmpty(userName)){
                 throw new UDFException("UserName is Empty!");
             }
@@ -335,7 +335,7 @@ public class UDFApi {
             if (StringUtils.isEmpty(fileName)){
                 throw new UDFException("fileName is Empty!");
             }
-            String userName = SecurityFilter.getLoginUsername(req);
+            String userName = req.getHeader("X-User-Name");
             if (StringUtils.isEmpty(userName)){
                 throw new UDFException("UserName is Empty!");
             }
@@ -394,7 +394,7 @@ public class UDFApi {
     public Response getSharedUsers(@Context HttpServletRequest req,  JsonNode json){
         Message message = null;
         try {
-            String userName = SecurityFilter.getLoginUsername(req);
+            String userName = req.getHeader("X-User-Name");
             if (StringUtils.isEmpty(userName)){
                 throw new UDFException("UserName is Empty!");
             }
@@ -422,7 +422,7 @@ public class UDFApi {
             if (CollectionUtils.isEmpty(sharedUsers)){
                 throw new UDFException("SharedUsers is Empty!");
             }
-            String userName = SecurityFilter.getLoginUsername(req);
+            String userName = req.getHeader("X-User-Name");
             if (StringUtils.isEmpty(userName)){
                 throw new UDFException("UserName is Empty!");
             }

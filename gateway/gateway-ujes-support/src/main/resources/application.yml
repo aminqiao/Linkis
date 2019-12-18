@@ -22,7 +22,7 @@ spring:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost:port/eureka/
+      defaultZone: http://admin:bmsoft@10.194.186.228:4000/eureka
     registry-fetch-interval-seconds: 5
   instance:
     metadata-map:

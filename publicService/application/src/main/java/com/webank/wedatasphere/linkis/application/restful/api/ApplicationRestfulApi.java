@@ -61,7 +61,7 @@ public class ApplicationRestfulApi {
     @POST
     @Path("createApplication")
     public Response createApplication(@Context HttpServletRequest req, JsonNode json) throws IOException, ApplicationException {
-        String creator = SecurityFilter.getLoginUsername(req);
+        String creator = req.getHeader("X-User-Name");
         Long userId = applicationService.getUserIdByName(creator);
         String applicationName = json.get("name").getTextValue();
         String description = json.get("description").getTextValue();
@@ -134,7 +134,7 @@ public class ApplicationRestfulApi {
                 ApplicationConfiguration.DEFAULT_APPLICATIO_NAME.getValue().toString().equals(description)){
             throw new ApplicationException("Cannot change the name or description of the app to(不能将应用的名字或者描述改为)"+ApplicationConfiguration.DEFAULT_APPLICATIO_NAME.getValue().toString()+"Applications(的应用)");
         }
-        String creator = SecurityFilter.getLoginUsername(req);
+        String creator = req.getHeader("X-User-Name");
         if (flows != null){
             ApplicationUtils.updateFile(creator, flows,oldApplication.getJsonPath());
         }
@@ -153,7 +153,7 @@ public class ApplicationRestfulApi {
     @POST
     @Path("/application/list")
     public Response listApplication(@Context HttpServletRequest req) throws IOException {
-        String creator = SecurityFilter.getLoginUsername(req);
+        String creator = req.getHeader("X-User-Name");
         Long userId = applicationService.getUserIdByName(creator);
         List<Application> workflowApplications = applicationService.listApplication(userId);
         return Message.messageToResponse(Message.ok().data("applications",workflowApplications));
@@ -191,7 +191,8 @@ public class ApplicationRestfulApi {
     @GET
     @Path("getBaseInfo")
     public Response getBaseInfo(@Context HttpServletRequest req) throws IOException, ApplicationException, NoSuchFieldException, IllegalAccessException {
-        String creator = SecurityFilter.getLoginUsername(req);
+        //String creator = SecurityFilter.getLoginUsername(req);
+        String creator = req.getHeader("X-User-Name");
         //String creator = "harrywan";
         ApplicationUser user = applicationService.getUserByName(creator);
         Boolean isFirstLogin = true;
@@ -325,7 +326,7 @@ public class ApplicationRestfulApi {
     @GET
     @Path("getBaseInfoNew")
     public Response getBaseInfoNew(@Context HttpServletRequest req) throws ApplicationException, IllegalAccessException, NoSuchFieldException, IOException {
-        String creator = SecurityFilter.getLoginUsername(req);
+        String creator = req.getHeader("X-User-Name");
         //String creator = "harrywan";
         ApplicationUser user = applicationService.getUserByName(creator);
         Boolean isFirstLogin = true;

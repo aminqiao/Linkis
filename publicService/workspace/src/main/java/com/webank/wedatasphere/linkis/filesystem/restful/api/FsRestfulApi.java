@@ -109,7 +109,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Path("/getUserRootPath")
     @Override
     public Response getUserRootPath(@Context HttpServletRequest req, @QueryParam("pathType") String pathType) throws IOException, WorkSpaceException {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         String path = null;
         String returnType = null;
         if (pathType.equals("hdfs")) {
@@ -142,7 +142,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Path("/createNewDir")
     @Override
     public Response createNewDir(@Context HttpServletRequest req, JsonNode json) throws IOException, WorkSpaceException {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         String path = json.get("path").getTextValue();
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("path:(路径：)" + path + "Is empty!(为空！)");
@@ -163,7 +163,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Path("/createNewFile")
     @Override
     public Response createNewFile(@Context HttpServletRequest req, JsonNode json) throws IOException, WorkSpaceException {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         String path = json.get("path").getTextValue();
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
@@ -185,7 +185,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     public Response rename(@Context HttpServletRequest req, JsonNode json) throws IOException, WorkSpaceException {
         String oldDest = json.get("oldDest").getTextValue();
         String newDest = json.get("newDest").getTextValue();
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         if (StringUtils.isEmpty(oldDest)) {
             throw new WorkSpaceException("Path(路径)：" + oldDest + "Is empty!(为空！)");
         }
@@ -213,7 +213,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     public Response upload(@Context HttpServletRequest req,
                            @FormDataParam("path") String path,
                            FormDataMultiPart form) throws IOException, WorkSpaceException {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
         }
@@ -239,7 +239,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Path("/deleteDirOrFile")
     @Override
     public Response deleteDirOrFile(@Context HttpServletRequest req, JsonNode json) throws IOException, WorkSpaceException {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         String path = json.get("path").getTextValue();
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
@@ -270,7 +270,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Override
     public Response getDirFileTrees(@Context HttpServletRequest req,
                                     @QueryParam("path") String path) throws IOException, WorkSpaceException {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
         }
@@ -330,7 +330,7 @@ public class FsRestfulApi implements FsRestfulRemote {
         ServletOutputStream outputStream = null;
         try {
             String charset = json.get("charset");
-            String userName = SecurityFilter.getLoginUsername(req);
+            String userName = req.getHeader("X-User-Name");
             String path = json.get("path");
             if (StringUtils.isEmpty(path)) {
                 throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
@@ -379,7 +379,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Override
     public Response isExist(@Context HttpServletRequest req,
                             @QueryParam("path") String path) throws IOException, WorkSpaceException {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         FsPath fsPath = new FsPath(path);
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
@@ -406,7 +406,7 @@ public class FsRestfulApi implements FsRestfulRemote {
                              @QueryParam("page") Integer page,
                              @QueryParam("pageSize") Integer pageSize,
                              @QueryParam("charset") String charset) throws IOException, WorkSpaceException {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         Message message = Message.ok();
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
@@ -563,7 +563,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Path("/saveScript")
     @Override
     public Response saveScript(@Context HttpServletRequest req, @RequestBody Map<String, Object> json) throws IOException, WorkSpaceException {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         String path = (String) json.get("path");
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "is empty!(为空！)");
@@ -626,7 +626,7 @@ public class FsRestfulApi implements FsRestfulRemote {
             if (StringUtils.isEmpty(charset)) {
                 charset = "utf-8";
             }
-            String userName = SecurityFilter.getLoginUsername(req);
+            String userName = req.getHeader("X-User-Name");
             if (StringUtils.isEmpty(outputFileType)) {
                 outputFileType = "csv";
             }
@@ -741,7 +741,7 @@ public class FsRestfulApi implements FsRestfulRemote {
                             @QueryParam("hasHeader") Boolean hasHeader,
                             @QueryParam("quote") String quote,
                             @QueryParam("escapeQuotes") Boolean escapeQuotes) throws Exception {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "is empty!(为空！)");
         }
@@ -812,8 +812,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Path("/openLog")
     @Override
     public Response openLog(@Context HttpServletRequest req, @QueryParam("path") String path) throws IOException, WorkSpaceException {
-        System.out.println("我进入了打开日志方法");
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "is empty!(为空！)");
         }
@@ -891,7 +890,7 @@ public class FsRestfulApi implements FsRestfulRemote {
               @QueryParam("model") String modelName,
               @QueryParam("version") String version,
               FormDataMultiPart form) throws WorkSpaceException, IOException {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         resourceService.addScript(modelName,userName,Integer.parseInt(version));
         //对数据库进行操作
         FormDataBodyPart file = form.getField("file");
@@ -979,7 +978,7 @@ public class FsRestfulApi implements FsRestfulRemote {
     @Override
     public Response getDirFileTreesWithoutLog(@Context HttpServletRequest req,
                                     @QueryParam("path") String path) throws IOException, WorkSpaceException {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         if (StringUtils.isEmpty(path)) {
             throw new WorkSpaceException("Path(路径)：" + path + "Is empty!(为空！)");
         }

@@ -17,7 +17,7 @@ fi
 export EUREKA_SERVER_LOG_PATH=$HOME/logs
 export EUREKA_SERVER_HEAP_SIZE="2G"
 export EUREKA_SERVER_CLASS=${EUREKA_SERVER_CLASS:-com.webank.wedatasphere.linkis.DataWorkCloudApplication}
-
+export DEBUG_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=10888"
 
 if [ $1 ];then
         type=$1
@@ -25,7 +25,7 @@ fi
 
 export EUREKA_SERVER_JAVA_OPTS="-Xms$EUREKA_SERVER_HEAP_SIZE -Xmx$EUREKA_SERVER_HEAP_SIZE -XX:+UseG1GC -XX:MaxPermSize=500m -Xloggc:$HOME/logs/gateway-gc.log"
 
-java $EUREKA_SERVER_JAVA_OPTS -cp $HOME/conf:$HOME/lib/* $EUREKA_SERVER_CLASS  2>&1 > $EUREKA_SERVER_LOG_PATH/linkis.out &
+java $EUREKA_SERVER_JAVA_OPTS $DEBUG_OPTS -cp $HOME/conf:$HOME/lib/* $EUREKA_SERVER_CLASS  2>&1 > $EUREKA_SERVER_LOG_PATH/linkis.out &
 pid=$!
 sleep 2
 if [[ -z "${pid}" ]]; then

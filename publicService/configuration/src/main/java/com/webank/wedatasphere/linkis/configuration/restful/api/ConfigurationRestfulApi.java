@@ -55,7 +55,7 @@ public class ConfigurationRestfulApi {
     @GET
     @Path("/getFullTreesByAppName")
     public Response getFullTreesByAppName(@Context HttpServletRequest req, @QueryParam("appName") String appName, @QueryParam("creator") String creator) {
-        String username = SecurityFilter.getLoginUsername(req);
+        String username = req.getHeader("X-User-Name");
         List<ConfigTree> configTrees = configurationService.getFullTree(appName,username,creator);
         return Message.messageToResponse(Message.ok().data("fullTree", configTrees));
     }
@@ -64,7 +64,7 @@ public class ConfigurationRestfulApi {
     @Path("/saveFullTree")
     public Response saveFullTree(@Context HttpServletRequest req, JsonNode json) throws IOException {
         List fullTrees = mapper.readValue(json.get("fullTree"), List.class);
-        String username = SecurityFilter.getLoginUsername(req);
+        String username = req.getHeader("X-User-Name");
         for (Object o : fullTrees) {
             String s = BDPJettyServerHelper.gson().toJson(o);
             ConfigTree fullTree = BDPJettyServerHelper.gson().fromJson(s, ConfigTree.class);

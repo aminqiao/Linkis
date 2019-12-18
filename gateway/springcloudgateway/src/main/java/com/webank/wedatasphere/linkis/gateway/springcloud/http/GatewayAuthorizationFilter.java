@@ -133,9 +133,7 @@ public class GatewayAuthorizationFilter extends JavaLog implements GlobalFilter,
 
     private Mono<Void> gatewayDeal(ServerWebExchange exchange, GatewayFilterChain chain, BaseGatewayContext gatewayContext) {
         SpringCloudGatewayHttpResponse gatewayHttpResponse = (SpringCloudGatewayHttpResponse) gatewayContext.getResponse();
-        if(!SecurityFilter.doFilter(gatewayContext)) {
-            return gatewayHttpResponse.getResponseMono();
-        } else if(gatewayContext.isWebSocketRequest()) {
+        if(gatewayContext.isWebSocketRequest()) {
             return chain.filter(exchange);
         }
         ServiceInstance serviceInstance;

@@ -78,7 +78,7 @@ public class VariableRestfulApi {
     @GET
     @Path("listGlobalVariable")
     public Response listGlobalVariable(@Context HttpServletRequest req) {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         List<VarKeyValueVO> kvs = variableService.listGlobalVariable(userName);
         return Message.messageToResponse(Message.ok().data("globalVariables", kvs));
     }
@@ -86,7 +86,7 @@ public class VariableRestfulApi {
     @POST
     @Path("saveGlobalVariable")
     public Response saveGlobalVariable(@Context HttpServletRequest req, JsonNode json) throws IOException, VariableException {
-        String userName = SecurityFilter.getLoginUsername(req);
+        String userName = req.getHeader("X-User-Name");
         List<VarKeyValueVO> userVariables = variableService.listGlobalVariable(userName);
         List globalVariables = mapper.readValue(json.get("globalVariables"), List.class);
         variableService.saveGlobalVaraibles(globalVariables, userVariables, userName);

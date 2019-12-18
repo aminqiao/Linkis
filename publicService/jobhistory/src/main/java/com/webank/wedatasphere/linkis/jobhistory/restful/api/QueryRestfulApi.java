@@ -59,7 +59,7 @@ public class QueryRestfulApi{
     @GET
     @Path("/{id}/get")
     public Response getTaskByID(@Context HttpServletRequest req, @PathParam("id") Long taskID) {
-        String username = SecurityFilter.getLoginUsername(req);
+        String username = req.getHeader("X-User-Name");
         QueryTaskVO vo = queryService.getTaskByID(taskID,username);
         return Message.messageToResponse(Message.ok().data("task",vo));
     }
@@ -70,7 +70,7 @@ public class QueryRestfulApi{
                          @QueryParam("endDate") Long endDate,@QueryParam("status") String status,
                          @QueryParam("pageNow") Integer pageNow,@QueryParam("pageSize") Integer pageSize,
                          @QueryParam("taskID") Long taskID,@QueryParam("executeApplicationName")String executeApplicationName) throws IOException, QueryException {
-        String username = SecurityFilter.getLoginUsername(req);
+        String username = req.getHeader("X-User-Name");
         if(StringUtils.isEmpty(pageNow)){
             pageNow = 1;
         }
