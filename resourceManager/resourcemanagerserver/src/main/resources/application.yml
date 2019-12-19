@@ -8,7 +8,7 @@ spring:
 eureka:
   client:
     serviceUrl:
-      defaultZone: locahost
+      defaultZone: http://admin:bmsoft@10.194.186.228:4000/eureka
   instance:
     metadata-map:
       test: wedatasphere

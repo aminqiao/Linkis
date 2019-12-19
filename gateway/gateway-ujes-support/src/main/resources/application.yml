@@ -25,8 +25,9 @@ eureka:
       defaultZone: http://admin:bmsoft@10.194.186.228:4000/eureka
     registry-fetch-interval-seconds: 5
   instance:
-    metadata-map:
-      test: wedatasphere
+    instance-id: ${spring.cloud.client.ip-address}:${spring.application.name}:${server.port}
+    prefer-ip-address: true
+
 
 management:
   endpoints:

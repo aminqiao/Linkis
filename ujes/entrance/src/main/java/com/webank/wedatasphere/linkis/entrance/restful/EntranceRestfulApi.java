@@ -80,7 +80,7 @@ public class EntranceRestfulApi implements EntranceRestfulRemote {
         Message message = null;
 //        try{
             logger.info("Begin to get an execID");
-            json.put(TaskConstant.UMUSER, SecurityFilter.getLoginUsername(req));
+            json.put(TaskConstant.UMUSER, req.getHeader("X-User-Name"));
             String execID = entranceServer.execute(json);
             Job job = entranceServer.getJob(execID).get();
             Task task = ((EntranceJob)job).getTask();
@@ -363,7 +363,7 @@ public class EntranceRestfulApi implements EntranceRestfulRemote {
         String executionCodeJson = new Gson().toJson(executionCode);
         json.put("executionCode",executionCodeJson);*/
 
-        json.put(TaskConstant.UMUSER, SecurityFilter.getLoginUsername(req));
+        json.put(TaskConstant.UMUSER, req.getHeader("X-User-Name"));
         ServerEvent serverEvent = new ServerEvent();
         serverEvent.setData(json);
         ServerEvent operation = bgService.operation(serverEvent);

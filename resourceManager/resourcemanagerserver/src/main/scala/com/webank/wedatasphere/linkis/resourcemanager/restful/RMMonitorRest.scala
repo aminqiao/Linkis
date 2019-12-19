@@ -86,7 +86,7 @@ class RMMonitorRest {
   @Path("userresources")
   def getUserResource(@Context request: HttpServletRequest, param: util.Map[String, AnyRef]): Response = {
     val message = Message.ok("")
-    val userName = SecurityFilter.getLoginUsername(request)
+    val userName = request.getHeader("X-User-Name")
     val modules = moduleResourceRecordService.getAll.map(_.getEmApplicationName).toSet
     modules.foreach { moduleName =>
       val resourceMap = new mutable.HashMap[String, String]()
@@ -101,7 +101,7 @@ class RMMonitorRest {
   @Path("engines")
   def getEngines(@Context request: HttpServletRequest, param: util.Map[String, AnyRef]): Response = {
     val message = Message.ok("")
-    val userName = SecurityFilter.getLoginUsername(request)
+    val userName = request.getHeader("X-User-Name")
     val userResourceRecords = userResourceRecordService.getUserResourceRecordByUser(userName)
     if (userResourceRecords == null || userResourceRecords.isEmpty) return message
     val engines = ArrayBuffer[mutable.HashMap[String, Any]]()
@@ -139,7 +139,7 @@ class RMMonitorRest {
   @POST
   @Path("enginekill")
   def killEngine(@Context request: HttpServletRequest, param: util.ArrayList[util.Map[String, AnyRef]]): Response = {
-    val userName = SecurityFilter.getLoginUsername(request)
+    val userName = request.getHeader("X-User-Name")
     for (engineParam <- param) {
       val ticketId = engineParam.get("ticketId").asInstanceOf[String]
       val moduleName = engineParam.get("moduleName").asInstanceOf[String]
@@ -231,7 +231,7 @@ class RMMonitorRest {
   @Path("queues")
   def getQueues(@Context request: HttpServletRequest, param: util.Map[String, AnyRef]): Response = {
     val message = Message.ok()
-    val userName = SecurityFilter.getLoginUsername(request)
+    val userName = request.getHeader("X-User-Name")
     val queues = new mutable.LinkedHashSet[String]()
     val userConfiguration = UserConfiguration.getCacheMap(RequestQueryAppConfigWithGlobal(userName, null, null, true))
     queues.add(RMConfiguration.USER_AVAILABLE_YARN_QUEUE_NAME.getValue(userConfiguration))
