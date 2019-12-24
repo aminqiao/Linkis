@@ -37,7 +37,7 @@ package object server {
   val EXCEPTION_MSG = "errorMsg"
   type JMap[K, V] = java.util.HashMap[K, V]
 
-  implicit def getUser(req: HttpServletRequest): String = SecurityFilter.getLoginUsername(req)
+  implicit def getUser(req: HttpServletRequest): String = req.getHeader("X-User-Name")
 
   def validateFailed(message: String): Message = Message(status = 2).setMessage(message)
   def validate[T](json: util.Map[String, T], keys: String*): Unit = {
